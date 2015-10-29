@@ -133,6 +133,7 @@ class MatrixClient(object):
 
     def _sync(self, limit=1):
         response = self.api.initial_sync(limit)
+        self.sync_response = response
         try:
             self.end = response["end"]
             for room in response["rooms"]:
@@ -149,6 +150,8 @@ class MatrixClient(object):
                         current_room.topic = state_event["content"]["topic"]
                     if "type" in state_event and state_event["type"] == "m.room.aliases":
                         current_room.aliases = state_event["content"]["aliases"]
+                    if "type" in state_event and state_event["type"] == "m.room.member":
+                        current_room.members.append(state_event["user_id"])
 
         except KeyError:
             pass
@@ -164,6 +167,7 @@ class Room(object):
         self.name = None
         self.aliases = []
         self.topic = None
+        self.members = []
 
     def send_text(self, text):
         return self.client.api.send_message(self.room_id, text)
